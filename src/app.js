@@ -2,21 +2,28 @@ const express = require("express");
 const app = express();
 const PORT = 8000;
 
-
-
 // http://localhost:8000/queries?userId=101&name=mudit
 app.get("/queries",(req, res) => {
-    console.log(req.query);
+    console.log(req.query.userId);
+    console.log(req.query.name);
     res.send("Hello");
 })
 
-//http://localhost:8000/dynamicroute/101/mudit
+// http://localhost:8000/dynamicroute/101/mudit
 app.get("/dynamicroute/:userID/:name",(req, res) => {
-    console.log(req.params);
     console.log(req.params.userID);
     console.log(req.params.name);
+    console.log(req.params);
     res.send("Hello, It is basically used when we pass data in url dynamically. \n so, we can access that data using above way.");
 })
+
+
+
+
+
+
+
+
 
 app.listen(PORT,()=>{
     console.log(`Server is running on port number ${PORT}`);
