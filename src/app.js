@@ -5,9 +5,9 @@ const PORT = 8000;
 const {userAuth, userAdmin} = require("../middlewares/auth")
 
 // Below line is basically used . If authentication falis then it return from here. We don't need to go down.
-app.use("/user",userAuth);
+//This one is the correct way to use
 
-app.use("/admin", userAuth);
+app.use("/admin", userAdmin);
 
 
 app.get("/user/getAllData", userAuth, (req, res) => { 
