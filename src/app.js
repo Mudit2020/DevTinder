@@ -2,100 +2,21 @@ const express = require("express");
 const app = express();
 const PORT = 8000;
 
+const {userAuth, userAdmin} = require("../middlewares/auth")
 
-// //Next method() . It is basically used to transfer the control form one route handle to other Route handler. 
+// Below line is basically used . If authentication falis then it return from here. We don't need to go down.
+app.use("/user",userAuth);
 
-// //Below one is working fine.
-// app.get("/", (req, res, next) => {
-//     console.log("1st Response");
-//     next(); // It is used for passing the control.
-// });
+app.use("/admin", userAuth);
 
 
-// app.get("/", (req, res) => {
-//     res.send("2nd response");
-// });
+app.get("/user/getAllData", userAuth, (req, res) => { 
+    res.send("Hi, My name is mudit. I am a User of this app.");
+})
 
-
-
-
-
-
-
-// // Error :- Cannot set headers after they are sent to the client
-// app.get("/", (req, res, next) => {
-//     res.send("1st Response");
-//     next(); 
-// });
-
-// app.get("/", (req, res) => {
-//     res.send("2nd response");
-// });
-
-
-
-// // Error :- Cannot set headers after they are sent to the client
-// app.get("/", (req, res, next) => {
-//     next();
-//     res.send("1st Response"); 
-// });
-
-// app.get("/", (req, res) => {
-//     res.send("2nd response");
-// });
-
-
-
-// // Error :- Cannot set headers after they are sent to the client
-// app.get("/", (req, res, next) => {
-//     res.send("1st Response"); 
-//     next();
-// });
-
-// app.get("/", (req, res, next) => {
-//     res.send("2nd response");
-//     next();
-// });
-
-
-
-// // The below code goes into the hand state.because there is no response sendby the client.
-// app.get("/", (req, res, next) => {
-//     console.log("1st Response"); 
-//     next();
-// });
-
-// app.get("/", (req, res) => {
-//     // res.send("2nd Response");
-// });
-
-
-
-
-
-
-
-
-
-
-
-
-app.get("/", (req, res, next) => {
-    console.log("1st Response"); 
-    next();
-});
-
-app.get("/", (req, res) => {
-    res.send("2nd Response");
-});
-
-
-// // Note:- server ek hi baar response deta hai ek request ke liye. Isliye, ek se jaada res.send work nahi kar rhe hai.
-
-
-
-
-
+app.get("/admin/getAllData", userAdmin, (req, res) => {
+    res.send("Hi, My name is mudit. I am a Admin of this app.")
+})
 
 
 app.listen(PORT,()=>{
