@@ -2,22 +2,22 @@ const express = require("express");
 const app = express();
 const PORT = 8000;
 
-const {userAuth, userAdmin} = require("../middlewares/auth")
 
-// Below line is basically used . If authentication falis then it return from here. We don't need to go down.
-//This one is the correct way to use
-
-app.use("/admin", userAdmin);
-
-
-app.get("/user/getAllData", userAuth, (req, res) => { 
-    res.send("Hi, My name is mudit. I am a User of this app.");
+app.get("/getUserData", (req, res) => {
+    throw new Error ("cnwekfnrej");
+    res.send("User Data Sent")
 })
 
-app.get("/admin/getAllData", userAdmin, (req, res) => {
-    res.send("Hi, My name is mudit. I am a Admin of this app.")
-})
 
+//below code is basically used. when upar agar kisi bhi route main error handle agr nahi hoti hai to wo neeche waaley 
+// route se handle ho jayegi.
+// Remember order of code matter alot.
+
+app.use("/", (err, req, res, next) => {
+    if(err) {
+        res.status(500).send("error occurred");
+    }
+})
 
 app.listen(PORT,()=>{
     console.log(`Server is running on port number ${PORT}`);
