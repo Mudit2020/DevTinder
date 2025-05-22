@@ -5,22 +5,17 @@ const PORT = 8000;
 const connectDB = require("./config/database");
 const User = require("./models/user");
 
-app.get("/",((req, res)=> {
-    res.send("You are on home page");
-}))
+app.use(express.json());
 
 app.post("/signup", async (req, res) => {
-    const data = {
-        firstName : "Mudit",
-        latsName : "Rayvoria",
-        email : "muditrayvoria@gmail.com",
-        password : "mudit@123",
-        age : 24,
-        gender : "Male"
+    const user = new User(req.body);
+    try {
+        await user.save();
+        res.send("user added succesfully");
     }
-    const user = new User(data);
-    await user.save();
-    res.send("user added succesfully");
+    catch(err) {
+        res.status(400).send("Error saving the user : ", err.message);
+    }
 })
 
 connectDB()
