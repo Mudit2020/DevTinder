@@ -64,7 +64,7 @@ app.get("/feedAllData", async (req, res) => {
 // and then returns the deleted document (if found)
 
 app.delete("/delete", async (req, res) => {
-    const userId = req.body.userId;
+    // const userId = req.body.userId;
     try {
         // const data = await User.findByIdAndDelete({_id : userId}); //both works fine in this case.
         // This works only for the delete.
@@ -76,9 +76,18 @@ app.delete("/delete", async (req, res) => {
         else {
             res.status(400).send("UserData is not present in the document.")
         }
+
+        //Below code delete all records from db in one go.
+        // const data = await User.deleteMany({});
+        // if(data["deletedCount"]>0) {
+        //     res.send("Whole data is deleted succesfully");
+        // }
+        // else {
+        //     res.send("Data is not present");
+        // }
     }
     catch(err) {
-        res.status(400).send("Data not found");
+        res.status(400).send(err.message);
     }
 })
 
@@ -90,10 +99,10 @@ app.delete("/delete", async (req, res) => {
 app.patch("/update", async (req, res) => {
     const userId = req.body.userId;
     const data = req.body; // This will return the data which we will pass from the postman fou updation.
-
     try {
         const updatedData = await User.findByIdAndUpdate({_id : userId}, data,  {
-            returnOriginal: true
+            returnOriginal: "after",
+            runValidators : true
         });   
         console.log(updatedData);
         // {_id : userId} - It is used for finding the document.
@@ -126,7 +135,8 @@ app.post("/signup", async (req, res) => {
         res.send("user added succesfully");
     }
     catch(err) {
-        res.status(400).send("Error saving the user : ", err.message);
+        // res.status(400).send(`Error saving the user: ${err.message}`);
+        res.status(400).send("Error saving the user: " + err.message);
     }
 })
 
@@ -141,5 +151,5 @@ connectDB()
         console.log(`Server is running on port number ${PORT}`);
     })
 }).catch((err) => {
-    console.log("Not connected successfully.", err);
+    console.log("Not connected successfully: "+ err.message);
 })
