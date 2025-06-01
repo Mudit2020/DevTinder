@@ -16,9 +16,14 @@
   "author": "Mudit Rayvoria",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "express": "^5.1.0",
+    "latest-version": "^9.0.0",
     "mongoose": "^8.14.0",
     "nodemon": "^3.1.9",
     "validator": "^13.15.15"
+  },
+  "devDependencies": {
+    "@types/validator": "^13.15.1"
   }
 }
