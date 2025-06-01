@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = 8000;
-
+const validator = require("validator");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 
@@ -104,15 +104,24 @@ app.patch("/update", async (req, res) => {
             returnOriginal: "after",
             runValidators : true
         });   
-        console.log(updatedData);
-        // {_id : userId} - It is used for finding the document.
-        // data - It is the data which is going to update.
-        // { returnOriginal: true });   :- This one return original document after the update.
-        // { returnOriginal: false });   :- This one return original document after the update.
-        res.send("User Details updated succesfully");
+        // console.log(updatedData);
+        // // {_id : userId} - It is used for finding the document.
+        // // data - It is the data which is going to update.
+        // // { returnOriginal: true });   :- This one return original document after the update.
+        // // { returnOriginal: false });   :- This one return original document before the update.
+        // res.send("User Details updated succesfully");
+
+        // How to handle. If someone wants like no duplicate email id is allowed in our app. user is not able to
+        // update the mail id with any esisting mail id.
+
+        // In below code email and password won't be update for any user.
+        if(Object.keys(data).includes("email", "password")) {
+            throw new Error("Data is not valid");
+        }
+        res.send("Data is updated successfully");
     }
     catch(err) {
-        res.status(400).send("Data not found.");
+        res.status(400).send(err.message);
     }
 })
 
@@ -123,20 +132,28 @@ app.patch("/update", async (req, res) => {
 
 
 
+//Encryot the password
 
 
 
 
 
+// Creating the new instance of an User Model. 
 app.post("/signup", async (req, res) => {
     const user = new User(req.body);
     try {
+        if(!validator.isEmail(req.body.email)) {
+            throw new Error("Email Id format is wrong.");
+        }    
+        if(!validator.isStrongPassword(req.body.password)) {
+            throw new Error("Password is not strong.");
+        } 
         await user.save();
         res.send("user added succesfully");
     }
     catch(err) {
         // res.status(400).send(`Error saving the user: ${err.message}`);
-        res.status(400).send("Error saving the user: " + err.message);
+        res.status(400).send(err.message);
     }
 })
 
