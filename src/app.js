@@ -6,8 +6,16 @@ const bcrypt = require("bcrypt");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const validateSignUpData = require("./utils/validation.js");
+const jwt = require("jsonwebtoken");
 
+const cookieParser = require("cookie-parser");
+
+
+// Below one middle ware is used to convert the req body into json format. That't we use this.
 app.use(express.json());
+
+// This parser is used for reading a cookie token from the reqest body.
+app.use(cookieParser());
 
 
 //There are many functions which is used for fetching a data from the DB.
@@ -164,23 +172,83 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
     try {
-        const emailExistOrNot = await User.findOne({email : req.body.email});
+        const user = await User.findOne({email : req.body.email});
 
-        if(emailExistOrNot==null){
-            throw new Error("Invalid Credentials1");
+        if(!user){
+            throw new Error("Invalid Credentials");
         }
 
-        const dbStoredPassword = emailExistOrNot.password;
-        if(! await bcrypt.compare(req.body.password, dbStoredPassword)) { // .compare method return true or false
-            throw new Error("Invalid Credentials2")
-        }
-        res.send("Login succesfully.");
+        const dbStoredPassword = user.password;
+        const isPasswordValid = await bcrypt.compare(req.body.password, dbStoredPassword); //compare method return true or false
+        if(isPasswordValid) { 
 
+            // Create a Token
+
+            // //Add token to the cookie and send response back to the user.
+            // //Below line just make the cookie and store the token inside the cookie and send back to the client
+            // res.cookie("token" , "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...") // this line add the token to the cookie
+            // const token = req.cookies.token // This will give you token.
+            // res.send("Login succesfully.");
+
+
+            // Below we created the JWT Token.
+            // Below line is used for generating the token. 
+            // It will generate the cookie and store the token inside that cookie.
+            const jwtToken = await jwt.sign({_id : user._id}, "mudit@123");
+            res.cookie("token" , jwtToken);
+            res.send("JWT Token is generated succesfully");
+        }
+        else {
+            throw new Error("Invalid Credentials");
+        }
     }
+    
     catch(err) {
         res.status(400).send(err.message);
     }
 })
+
+
+
+app.get("/profile", async (req, res) => {
+    try {
+        // // for reading the cookie we will use cookie-parser package.
+        // const cookies = req.cookies;
+        // const {token} = cookies;
+        // if(token) {
+        //     res.send("Profile is fetching succesfully");
+        // }
+        // else{
+        //     res.status(400).send("There is some issue in reading cookies");
+        // }
+
+        const cookies = req.cookies;
+        const {token} = cookies;
+
+        if(!token) {
+            throw new Error("Invalid Token");
+        }
+
+        //Validate my token.
+        const decodedMessage = jwt.verify(token, "mudit@123");
+        const {_id} = decodedMessage;
+
+        console.log("Logged in user Id is", _id);
+
+        const userData = await User.findById(_id);
+
+        if(!User) {
+            throw new Error("Please login again. User does not exist. Or, may you are new one. You need to signup");
+        }
+        res.send(userData);
+    }
+    catch(err) { 
+        res.status(400).send(err.message);
+    }
+
+})
+
+
 
 app.use("/",(req, res) => {
     res.send("There is some issue in our code");
