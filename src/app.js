@@ -1,14 +1,13 @@
 const express = require("express");
 const app = express();
 const PORT = 8000;
-const validator = require("validator");
 const bcrypt = require("bcrypt");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const validateSignUpData = require("./utils/validation.js");
 const jwt = require("jsonwebtoken");
-
 const cookieParser = require("cookie-parser");
+const authValidation = require("./middlewares/auth.js")
 
 
 // Below one middle ware is used to convert the req body into json format. That't we use this.
@@ -17,22 +16,6 @@ app.use(express.json());
 // This parser is used for reading a cookie token from the reqest body.
 app.use(cookieParser());
 
-
-//There are many functions which is used for fetching a data from the DB.
-// .find({});
-// .findOne({});
-// .findById({});
- 
-// Below code is when data is present in DB. And, we just need to find out then we can simply get that data
-// by just passing an existing key in the Database. It will return an array of data.
-// .find() :- It will gives you all data from the db with same email in the array form.
-//data.length :- This function is used for finding the length of the records which is present in the DB.
-
-// .find() :- this method gives us the array of data
-// .findOne() :- It only gives one data. Not the whole array of data.
-
-//Feed API - Get /feed - get all the users from the database.
-// .find({})  :- If we are using like this then we will get all the document from the collection.
 
 //Get users by email.
 app.get("/feed", async (req, res) => {
@@ -63,16 +46,7 @@ app.get("/feedAllData", async (req, res) => {
 
 
 
-
-
-
-// .delete () :- It deletes whole in one go.
-// .deleteOne() :-  It delete only one matching record from the collection.
-// .deleteMany() :- It deletes all the matching records from the collection.
-// .findByIdAndDelete() :- It deletes the collection . jiski id match kar rahi hogi.
-// .findOneAndDelete() :- finds a single document matching a provided filter, deletes it, 
-// and then returns the deleted document (if found)
-
+// Delete data from the database
 app.delete("/delete", async (req, res) => {
     // const userId = req.body.userId;
     try {
@@ -86,15 +60,6 @@ app.delete("/delete", async (req, res) => {
         else {
             res.status(400).send("UserData is not present in the document.")
         }
-
-        //Below code delete all records from db in one go.
-        // const data = await User.deleteMany({});
-        // if(data["deletedCount"]>0) {
-        //     res.send("Whole data is deleted succesfully");
-        // }
-        // else {
-        //     res.send("Data is not present");
-        // }
     }
     catch(err) {
         res.status(400).send(err.message);
@@ -104,8 +69,6 @@ app.delete("/delete", async (req, res) => {
 
 
 //updating the data :-
-
-
 app.patch("/update", async (req, res) => {
     const userId = req.body.userId;
     const data = req.body; // This will return the data which we will pass from the postman fou updation.
@@ -114,17 +77,6 @@ app.patch("/update", async (req, res) => {
             returnOriginal: "after",
             runValidators : true
         });   
-        // console.log(updatedData);
-        // // {_id : userId} - It is used for finding the document.
-        // // data - It is the data which is going to update.
-        // // { returnOriginal: true });   :- This one return original document after the update.
-        // // { returnOriginal: false });   :- This one return original document before the update.
-        // res.send("User Details updated succesfully");
-
-        // How to handle. If someone wants like no duplicate email id is allowed in our app. user is not able to
-        // update the mail id with any esisting mail id.
-
-        // In below code email and password won't be update for any user.
         if(Object.keys(data).includes("email", "password")) {
             throw new Error("Data is not valid");
         }
@@ -134,17 +86,6 @@ app.patch("/update", async (req, res) => {
         res.status(400).send(err.message);
     }
 })
-
-
-//Learn other function as well for patch.
-// difference btween patch and put ?
-// Update the data using email id as above.
-
-
-
-//Encryot the password
-
-
 
 
 
@@ -181,19 +122,6 @@ app.post("/login", async (req, res) => {
         const dbStoredPassword = user.password;
         const isPasswordValid = await bcrypt.compare(req.body.password, dbStoredPassword); //compare method return true or false
         if(isPasswordValid) { 
-
-            // Create a Token
-
-            // //Add token to the cookie and send response back to the user.
-            // //Below line just make the cookie and store the token inside the cookie and send back to the client
-            // res.cookie("token" , "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...") // this line add the token to the cookie
-            // const token = req.cookies.token // This will give you token.
-            // res.send("Login succesfully.");
-
-
-            // Below we created the JWT Token.
-            // Below line is used for generating the token. 
-            // It will generate the cookie and store the token inside that cookie.
             const jwtToken = await jwt.sign({_id : user._id}, "mudit@123");
             res.cookie("token" , jwtToken);
             res.send("JWT Token is generated succesfully");
@@ -202,52 +130,23 @@ app.post("/login", async (req, res) => {
             throw new Error("Invalid Credentials");
         }
     }
-    
     catch(err) {
         res.status(400).send(err.message);
     }
 })
 
 
-
-app.get("/profile", async (req, res) => {
+// If we get any error in authValidation function then wo wahi error ko return kardega . code aage execute nhi hoga.
+// means next handle run nahi hoga jo .get ("/profile") main likha hai.
+// authValidation is act as middle one for 
+app.get("/profile", authValidation, async (req, res) => {
     try {
-        // // for reading the cookie we will use cookie-parser package.
-        // const cookies = req.cookies;
-        // const {token} = cookies;
-        // if(token) {
-        //     res.send("Profile is fetching succesfully");
-        // }
-        // else{
-        //     res.status(400).send("There is some issue in reading cookies");
-        // }
-
-        const cookies = req.cookies;
-        const {token} = cookies;
-
-        if(!token) {
-            throw new Error("Invalid Token");
-        }
-
-        //Validate my token.
-        const decodedMessage = jwt.verify(token, "mudit@123");
-        const {_id} = decodedMessage;
-
-        console.log("Logged in user Id is", _id);
-
-        const userData = await User.findById(_id);
-
-        if(!User) {
-            throw new Error("Please login again. User does not exist. Or, may you are new one. You need to signup");
-        }
-        res.send(userData);
+        res.send(req.user);
     }
-    catch(err) { 
+    catch(err) {
         res.status(400).send(err.message);
     }
-
 })
-
 
 
 app.use("/",(req, res) => {

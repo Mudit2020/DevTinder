@@ -1,28 +1,33 @@
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 
-const userAuth = (req, res, next) => {
-    console.log("This authentication for the user level");
-    const userPassword = "MuditUser1@20";
-    if(userPassword === "MuditUser1@20") {
-        next();
+const authValidation = async (req, res, next) => {
+    try{
+        const {token} = req.cookies;
+        if(!token){
+            throw new Error("Invalid token");
+        }
+
+        //Validate my token.
+        const decodedMessage = await jwt.verify(token, "mudit@123");
+        const {_id} = decodedMessage;
+
+        const userData = await User.findById(_id);
+
+        //whatever we find from the database. we just add to the reuest.
+        req.user = userData;
+
+        if(!userData) {
+            throw new Error("User not found");
+        }
+        next(); //It is used for calling an next handler.
     }
-    else{ 
-        res.status(401).send("Unauthorized Admin. Check your password");
+    catch(err) {
+        res.status(404).send(err.message);
     }
 }
 
-
-const userAdmin = (req, res, next) => {
-    console.log("This authentication for the Admin Level");
-    const adminPassword = "MuditAdmin1@20";
-    if(adminPassword === "MuditAdmin1@20") {
-        next();
-    }
-    else {
-        res.status(401).send("Unauthorized Admin. Check your password")
-    }
-}
-
-module.exports = {userAuth, userAdmin};
+module.exports = authValidation;
 
 
 
