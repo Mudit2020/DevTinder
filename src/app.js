@@ -91,8 +91,12 @@ app.patch("/update", async (req, res) => {
 
 // Creating the new instance of an User Model. 
 app.post("/signup", async (req, res) => {
-    // Validation of data is very important.
     try {
+        const userExistsOrNot = await User.find({email : req.body.email});
+        if(userExistsOrNot && userExistsOrNot.length>0) {
+            throw new Error("User is already is exists");
+        }
+
         validateSignUpData(req);
 
         //Encrypt the password
@@ -114,16 +118,17 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
     try {
         const user = await User.findOne({email : req.body.email});
+        // Here, user is a instance. so, we can call our schema mehtods by using the instance.
 
         if(!user){
             throw new Error("Invalid Credentials");
         }
 
-        const dbStoredPassword = user.password;
-        const isPasswordValid = await bcrypt.compare(req.body.password, dbStoredPassword); //compare method return true or false
+        const isPasswordValid = await user.validatePassword(req.body.password);
         if(isPasswordValid) { 
-            const jwtToken = await jwt.sign({_id : user._id}, "mudit@123");
-            res.cookie("token" , jwtToken);
+            const jwtToken = await user.getJWT();
+            // 86,400,000 mili seconds :- 1day
+            res.cookie("token" , jwtToken,  {expires: new Date(Date.now() + 86,400,000)}, {httpOnly: true});
             res.send("JWT Token is generated succesfully");
         }
         else {
@@ -146,6 +151,14 @@ app.get("/profile", authValidation, async (req, res) => {
     catch(err) {
         res.status(400).send(err.message);
     }
+})
+
+
+app.post("/sendConnectionRequest", authValidation, async (req, res) => {
+
+    const user = req.user;
+    
+    res.send(user.firstName+ " Send the connection request");
 })
 
 

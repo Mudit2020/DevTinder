@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema({
     firstName : {
@@ -46,6 +48,23 @@ const userSchema = new mongoose.Schema({
 {
     timestamps : true
 })
+
+// this keyword is used for accesing the instances of file.
+// and, when we create a new user then we create new instance of an user.
+userSchema.methods.getJWT = async function () {
+    const user = this;
+    const jwtToken = await jwt.sign({_id : user._id}, "mudit@123", {expiresIn : '1d'});
+    return jwtToken;
+}
+
+
+userSchema.methods.validatePassword = async function (passwordInputByUser) {
+    const user = this;
+    const passwordHash = user.password;
+
+    const isPasswordValid = await bcrypt.compare(passwordInputByUser, passwordHash);
+    return isPasswordValid;
+}
 
 const userModel = mongoose.model("User",userSchema);
 
